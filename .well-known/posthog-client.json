@@ -1,0 +1,12 @@
+{
+  "client_id": "https://alex0sp.github.io/mammut-oauth/.well-known/posthog-client.json",
+  "client_name": "Mammut",
+  "client_uri": "https://alex0sp.github.io/mammut-oauth/",
+  "logo_uri": "https://alex0sp.github.io/mammut-oauth/mammut-icon-256.png",
+  "policy_uri": "https://alex0sp.github.io/mammut-oauth/#privacy",
+  "redirect_uris": ["http://127.0.0.1/oauth/posthog/callback"],
+  "token_endpoint_auth_method": "none",
+  "com.posthog": {
+    "scopes": ["project:read", "dashboard:read", "insight:read"]
+  }
+}
