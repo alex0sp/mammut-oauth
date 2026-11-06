@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Static page: no scripts, no cookies, no third-party requests. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<title>Mammut – what it reads and how your data is handled</title>
+<meta name="description" content="Mammut is a Mac app that shows your RevenueCat revenue and PostHog product analytics in one place. It runs on your own Mac, reads only, and sends your data nowhere else.">
+<meta property="og:title" content="Mammut">
+<meta property="og:description" content="Your studio's command hub. Read-only RevenueCat and PostHog data, kept on your own Mac.">
+<meta property="og:image" content="https://alex0sp.github.io/mammut-oauth/mammut-icon-256.png">
+<link rel="icon" href="mammut-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="mammut-icon-256.png">
+<style>
+  /* "Glacier Glass" tokens from design/DESIGN_LANGUAGE.md. Ice = data, amber = agents only. */
+  :root {
+    --bg: #F4F6FB;
+    --aurora: radial-gradient(60rem 30rem at 85% -10%, #E6F3FF 0%, transparent 70%);
+    --text: #0B1020;
+    --secondary: #4A5468;
+    --card: #FFFFFF;
+    --hairline: rgba(7, 10, 22, 0.09);
+    --ice: #136CC0;          /* darker than the #1C8BE0 tint so small link text meets WCAG AA */
+    --amber: #A86500;        /* accent.amber, darkened for AA text contrast on light */
+    --code-bg: rgba(19, 108, 192, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #070A16;
+      --aurora: radial-gradient(60rem 32rem at 85% -10%, rgba(143, 211, 255, 0.18) 0%, rgba(26, 37, 71, 0.55) 40%, transparent 75%);
+      --text: #EEF2FA;
+      --secondary: #A9B3C7;
+      --card: rgba(255, 255, 255, 0.04);
+      --hairline: rgba(255, 255, 255, 0.08);
+      --ice: #8FD3FF;
+      --amber: #FFB547;
+      --code-bg: rgba(143, 211, 255, 0.10);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--aurora), var(--bg);
+    background-repeat: no-repeat;
+    color: var(--text);
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  }
+  .page { max-width: 760px; margin: 0 auto; padding: 56px 20px 40px; }
+  h1, h2, h3 { font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif; line-height: 1.2; margin: 0; }
+  h1 { font-size: 2.6rem; font-weight: 700; letter-spacing: -0.02em; }
+  h2 { font-size: 1.5rem; font-weight: 650; margin-bottom: 12px; }
+  h3 { font-size: 1.1rem; font-weight: 650; }
+  p { margin: 0 0 12px; }
+  a { color: var(--ice); text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--ice); outline-offset: 3px; border-radius: 4px; }
+  code { font: 0.82em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+  .muted { color: var(--secondary); }
+
+  header { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; margin-bottom: 20px; }
+  header img { width: 84px; height: 84px; border-radius: 20px; }
+  .tagline { color: var(--secondary); margin: 4px 0 0; font-size: 1.05rem; }
+  .lead { font-size: 1.15rem; margin: 0 0 40px; }
+
+  section { margin: 0 0 40px; }
+  /* Two columns on wide screens (a 2 × 2 grid of four points), one on phones. */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 0.5px solid var(--hairline); border-radius: 22px; padding: 18px 20px; }
+  .card h3 { margin-bottom: 6px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  .source { margin-bottom: 14px; }
+  .source h3 { margin-bottom: 10px; }
+  dl { margin: 0; display: grid; gap: 12px; }
+  dt { font-weight: 600; }
+  dd { margin: 2px 0 0; color: var(--secondary); }
+  .never { margin: 14px 0 0; padding-top: 12px; border-top: 0.5px solid var(--hairline); }
+
+  .assistant { border-left: 3px solid var(--amber); padding-left: 14px; }
+  ol { padding-left: 1.3em; margin: 0 0 12px; }
+  li { margin-bottom: 6px; }
+
+  footer { border-top: 0.5px solid var(--hairline); padding-top: 18px; font-size: 0.9rem; color: var(--secondary); }
+  footer p { margin-bottom: 6px; }
+
+  @media (max-width: 520px) {
+    .page { padding-top: 36px; }
+    header { grid-template-columns: 1fr; gap: 14px; }
+    header img { width: 68px; height: 68px; border-radius: 16px; }
+    h1 { font-size: 2.1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <img src="mammut-icon-256.png" alt="" width="84" height="84">
+    <div>
+      <h1>Mammut</h1>
+      <p class="tagline">Your studio’s command hub. Data in ice, agents in amber.</p>
+    </div>
+  </header>
+
+  <main>
+    <p class="lead">Mammut is a Mac app for indie app developers. It brings your RevenueCat revenue and your PostHog product analytics into one calm cockpit, so you see how your apps are doing without switching tools.</p>
+
+    <section aria-labelledby="handling">
+      <h2 id="handling">How your data is handled</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>It runs on your Mac</h3>
+          <p>Mammut connects through a small backend on your own Mac. Your sign-ins, keys and synced numbers are stored there, in files only your user account can read.</p>
+        </div>
+        <div class="card">
+          <h3>It only reads</h3>
+          <p>Mammut asks for read access only. It can’t create, change or delete anything in your PostHog or RevenueCat account.</p>
+        </div>
+        <div class="card">
+          <h3>No Mammut servers</h3>
+          <p>Your data, sign-ins and keys never reach tioocoo studios. This page and Mammut’s sign-in description are static files that collect nothing.</p>
+        </div>
+        <div class="card">
+          <h3>You stay in control</h3>
+          <p>Disconnect a source in Mammut at any time, or revoke Mammut’s access in your PostHog or RevenueCat account.</p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="permissions">
+      <h2 id="permissions">What Mammut can read</h2>
+      <p class="muted">When you sign in, the provider shows you this access before you approve it.</p>
+
+      <div class="card source">
+        <h3>PostHog</h3>
+        <dl>
+          <div><dt>Projects (read)</dt><dd>Lists your projects so you can pick one. <code>project:read</code></dd></div>
+          <div><dt>Dashboards (read)</dt><dd>Reads the one dashboard you choose to show in Mammut. <code>dashboard:read</code></dd></div>
+          <div><dt>Insights (read)</dt><dd>Reads the results of that dashboard’s insights, such as daily active users or sessions. <code>insight:read</code></dd></div>
+        </dl>
+        <p class="never muted">Mammut reads only the dashboard you choose and has no write access.</p>
+      </div>
+
+      <div class="card source">
+        <h3>RevenueCat</h3>
+        <dl>
+          <div><dt>Overview metrics (read)</dt><dd>Reads your project’s overview numbers, such as monthly recurring revenue, revenue and active subscriptions. <code>charts_metrics:overview:read</code></dd></div>
+          <div><dt>Projects (read)</dt><dd>Lists your project names so you can pick one. <code>project_configuration:projects:read</code></dd></div>
+        </dl>
+        <p class="never muted">Mammut doesn’t ask for customer or subscriber details and has no write access.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="privacy">
+      <h2 id="privacy">Privacy</h2>
+      <p><strong>What is stored, and where.</strong> The backend on your Mac keeps the latest synced numbers for each source, plus one backup a day for 30 days. Sign-ins and keys are kept in a private configuration file on the same Mac. Nothing is sent to tioocoo studios or anyone else.</p>
+      <p><strong>Where your data goes.</strong> Your Mac talks directly to PostHog and RevenueCat to fetch your numbers. Mammut has no accounts, no analytics and no advertising.</p>
+      <p class="assistant"><strong>The optional setup assistant.</strong> If you turn it on, your chat messages and Mammut’s connection status are sent to Anthropic, using your own Anthropic API key, to answer setup questions. Keys and tokens are never included: text that looks like one is blocked on your Mac before anything is sent.</p>
+      <p><strong>This page.</strong> It is hosted on GitHub Pages and uses no cookies, scripts or trackers. GitHub may keep standard server logs, as for any site it hosts.</p>
+      <p><strong>Deleting everything.</strong> Disconnect your sources in Mammut, then delete the backend’s folders on your Mac: <code>~/.config/mammut</code>, <code>~/.local/share/mammut</code> and <code>~/Library/Application Support/MammutBackend</code>.</p>
+    </section>
+
+    <section aria-labelledby="disconnect">
+      <h2 id="disconnect">Disconnecting Mammut</h2>
+      <ol>
+        <li>In Mammut, open <strong>Connections</strong> and click <strong>Disconnect</strong> on the source. Its sign-in or key is removed from your Mac at once.</li>
+        <li>To also end the sign-in on the provider’s side, revoke Mammut’s access in your PostHog or RevenueCat account settings.</li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="contact">
+      <h2 id="contact">Contact</h2>
+      <p>Questions or feedback? <a href="https://github.com/alex0sp/mammut-oauth/issues">Open an issue on GitHub</a>.</p>
+      <p>Found a security problem? Please <a href="https://github.com/alex0sp/mammut-oauth/security/advisories/new">report it privately</a> instead of opening a public issue.</p>
+      <p class="muted">Never include a key, token or a screenshot showing one.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Mammut is made by tioocoo studios. Last updated 6 November 2026.</p>
+    <p>PostHog and RevenueCat are trademarks of their respective owners. Mammut is not affiliated with or endorsed by them.</p>
+  </footer>
+</div>
+</body>
+</html>
